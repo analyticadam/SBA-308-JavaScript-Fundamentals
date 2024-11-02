@@ -71,12 +71,20 @@ const LearnerSubmissions = [
             submitted_at: "2023-03-07",
             score: 140
         }
+    },
+    {
+        learner_id: 148,
+        assignment_id: 2,
+        submission: {
+            submitted_at: "2023-03-07",
+            score: 140
+        }
     }
 ];
 function getLearnerData(course, ag, submissions) {
     //Creating a map structure where learner data is stored by id
     const learnerMap = new Map();
-    
+
     // Loop through each sumbmission 
     submissions.forEach(submission => {
         const learnerID = submission.learner_id; //select the learner id
@@ -95,6 +103,7 @@ function getLearnerData(course, ag, submissions) {
     });
     //Print the learnerMap to verify it works
     console.log("Step 1 - Learner Map:", learnerMap);
+
     //Step 2: Create a map to store assignments by ID for lookup
     const assignmentMap = new Map();
     ag.assignments.forEach(assignment => {
@@ -102,21 +111,54 @@ function getLearnerData(course, ag, submissions) {
     });
     // here, we would process this data to achieve the desired result.
     const result = [];
-    
+
     learnerMap.forEach((learnerSubmissions, learnerID) => {
         let totalScore = 0;
         let maxPossibleScore = 0;
         const learnerData = { id: learnerID };
-        learnerSubmissions.forEach(({ assignment_id, score }) => {
-            const assignment = assignmentMap.get(assignment_id);
-            const percentageScore = score / assignment.points_possible;
-            // Store percentage score for each assignment by its ID
-            learnerData[assignment_id] = parseFloat(percentageScore.toFixed(3));
-            // Add scores for calculation of average
-            totalScore += score;
-            maxPossibleScore += assignment.points_possible;
+
+        learnerSubmissions.forEach(({ assignment_id, score, submitted_at }) => {
+            {
+                const assignment = assignmentMap.get(assignment_id);
+                const percentageScore = score / assignment.points_possible;
+
+                // Store percentage score for each assignment by its ID
+                learnerData[assignment_id] = parseFloat(percentageScore.toFixed(3));
+
+                // Add scores for calculation of average
+                totalScore += score;
+                maxPossibleScore += assignment.points_possible;
+
+                // Dynamic call to `dueDateCompare` with actual values
+                dueDateCompare(assignment.due_at, submitted_at, assignment.points_possible, assignment.name);
+            }
         });
-        
+
+        function dueDateCompare(due_at, submitted_at, points_possible, assignmentName) {
+            const dueDate = new Date(due_at).toLocaleDateString('en-US');
+            const submittedDate = new Date(submitted_at).toLocaleDateString('en-US');
+            const currentDate = new Date().toLocaleDateString('en-US');
+
+            console.log("Due Date:", dueDate);
+            console.log("Submission Date:", submittedDate);
+            console.log("Current Date:", currentDate);
+
+            if (new Date(due_at) > new Date() ) {
+                // Assignment is not due at the moment
+                console.log(`Assignment ${assignmentName} is not due yet. Due date  is: ${due_at}`);
+                return;
+            } else if (submittedDate > dueDate) {
+                // Assignment is late, deduct 10%
+                console.log(`"Assignment is late. You lose 10% of the total points possible for this assignment."`);
+                const penaltyScore = points_possible * 0.9; //10% total poiints deducted
+                console.log(`Your score is now after the 10% penalty: ${penaltyScore}`);
+            } else {
+                console.log("You turned in your assignment on time.  You are awesome!!");
+            }
+        }
+
+        //dueDateCompare("2023-01-25", "2023-01-26", 100); // Late submission example
+
         // Calculate average learner score for learner
         learnerData.avg = parseFloat((totalScore / maxPossibleScore).toFixed(3));
         result.push(learnerData);
