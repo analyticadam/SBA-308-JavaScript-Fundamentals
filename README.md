@@ -5,8 +5,8 @@ Requirements for SBA 308-JavaScript-Fundamentals
 [X] Use strings, numbers, and Boolean values cached within variables.
 [X] Use at least two if/else statements to control program flow. Optionally, use at least one switch statement.
 [ ] Use try/catch statements to manage potential errors in the code, such as incorrectly formatted or typed data being fed into your program.
-[ ] Utilize at least two different types of loops.
-[ ] Utilize at least one loop control keyword such as break or continue.
+[X] Utilize at least two different types of loops.
+[X] Utilize at least one loop control keyword such as break or continue.
 [ ] Create and/or manipulate arrays and objects.
 [ ] Demonstrate the retrieval, manipulation, and removal of items in an array or properties in an object.
 [ ] Use functions to handle repeated tasks.
