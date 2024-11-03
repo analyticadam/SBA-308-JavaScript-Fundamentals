@@ -157,45 +157,41 @@ function getLearnerData(course, ag, submissions) {
         }
 
     });
-    
+
     //Print result after each learner processed
     console.log("Step 2- Result:", result);
     return result;
 }
 
 function dueDateCompare(due_at, submitted_at, points_possible, assignmentName) {
-    const dueDate = new Date(due_at).toLocaleDateString('en-US');
-    const submittedDate = new Date(submitted_at).toLocaleDateString('en-US');
-    const currentDate = new Date().toLocaleDateString('en-US');
-    let isLate = false; // Boolean value tracking late submissions
+    try {
+        const dueDate = new Date(due_at).toLocaleDateString('en-US');
+        const submittedDate = new Date(submitted_at).toLocaleDateString('en-US');
 
-    console.log("Due Date:", dueDate);
-    console.log("Submission Date:", submittedDate);
-    console.log("Current Date:", currentDate);
+        let isLate = false; // Boolean value tracking late submissions
 
-    if (submittedDate > dueDate) {
-        isLate = true; // Set true if submission is late
-        // Assignment is not due at the moment
-        console.log(`Assignment ${assignmentName} is not due yet. Due date  is: ${due_at}`);
-        return;
-    } else if (submittedDate > dueDate) {
-        isLate = true;  // Set to true if submission is late
-        // Assignment is late, deduct 10%
-        console.log(`"Assignment is late. You lose 10% of the total points possible for this assignment."`);
-        const penaltyScore = points_possible * 0.9; //10% total poiints deducted
-        console.log(`Your score is now after the 10% penalty: ${penaltyScore}`);
-    } else {
-        console.log("You turned in your assignment on time.  You are awesome!!");
+        console.log("Due Date:", dueDate);
+        console.log("Submission Date:", submittedDate);
+
+        if (submittedDate > dueDate) {
+            isLate = true; // Set true if submission is late
+            console.log(`"Assignment is late. You lose 10% of the total points possible for this assignment."`);
+            const penaltyScore = points_possible * 0.9; //10% total poiints deducted
+            console.log(`Your score is now after the 10% penalty: ${penaltyScore}`);
+        } else {
+            console.log("Assignment is on time.  You are awesome!");
+        }
+
+        return isLate;// Return Boolean
+
+    } catch (error) {
+        console.error('Error in date comparison for assignment "${assignmentName}: ${error.message}');
+        return false;
     }
-
-    return isLate; // Return Boolean
 }
 
 //Was used to test if dueDate worked and it did
 //dueDateCompare("2023-01-25", "2023-01-26", 100); // Late submission example
-
-
-
 
 const result = getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions);
 console.log("Final result:", result)
