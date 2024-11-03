@@ -91,11 +91,11 @@ function getLearnerData(course, ag, submissions) {
         const assignmentInfo = {
             assignment_id: submission.assignment_id, //select assignment id
             submitted_at: submission.submission.submitted_at, //select submission date
-            score: submission.submission.score //select score
+            score: submission.submission.score // select score
         };
         // Check if learner id exists in map
         if (!learnerMap.has(learnerID)) {
-            //If learner id is not fund, create a new entry with an empty array for learner submission
+            //If learner id is not found, create a new entry with an empty array for learner submission
             learnerMap.set(learnerID, []);
         }
         //Add assignment info to array of learner submissions
@@ -110,6 +110,7 @@ function getLearnerData(course, ag, submissions) {
         assignmentMap.set(assignment.id, assignment);
     });
     // here, we would process this data to achieve the desired result.
+
     const result = [];
 
     learnerMap.forEach((learnerSubmissions, learnerID) => {
@@ -117,55 +118,84 @@ function getLearnerData(course, ag, submissions) {
         let maxPossibleScore = 0;
         const learnerData = { id: learnerID };
 
-        learnerSubmissions.forEach(({ assignment_id, score, submitted_at }) => {
-            {
-                const assignment = assignmentMap.get(assignment_id);
+        for (const { assignment_id, score, submitted_at } of learnerSubmissions) {
+            const assignment = assignmentMap.get(assignment_id);
+
+            if (assignment) { // Check if assignment is in map
+                const dueDate = new Date(assignment.due_at);
+                const submissionDate = new Date(submitted_at);
+
+                //Check if assignment was late
+                if (submissionDate > dueDate) {
+                    console.log(`Skip processing for learner ${learnerID} due to late on assignment ${assignment.name}.`);
+                    break; // Will stop processing as assignment is late
+                }
+
+                // Process on time assignment
                 const percentageScore = score / assignment.points_possible;
 
                 // Store percentage score for each assignment by its ID
-                learnerData[assignment_id] = parseFloat(percentageScore.toFixed(3));
+                learnerData[assignment_id] = parseFloat(percentageScore.toFixed(2));
 
                 // Add scores for calculation of average
                 totalScore += score;
                 maxPossibleScore += assignment.points_possible;
 
-                // Dynamic call to `dueDateCompare` with actual values
+                // Used to check the `dueDateCompare` function with actual values
                 dueDateCompare(assignment.due_at, submitted_at, assignment.points_possible, assignment.name);
-            }
-        });
-
-        function dueDateCompare(due_at, submitted_at, points_possible, assignmentName) {
-            const dueDate = new Date(due_at).toLocaleDateString('en-US');
-            const submittedDate = new Date(submitted_at).toLocaleDateString('en-US');
-            const currentDate = new Date().toLocaleDateString('en-US');
-
-            console.log("Due Date:", dueDate);
-            console.log("Submission Date:", submittedDate);
-            console.log("Current Date:", currentDate);
-
-            if (new Date(due_at) > new Date() ) {
-                // Assignment is not due at the moment
-                console.log(`Assignment ${assignmentName} is not due yet. Due date  is: ${due_at}`);
-                return;
-            } else if (submittedDate > dueDate) {
-                // Assignment is late, deduct 10%
-                console.log(`"Assignment is late. You lose 10% of the total points possible for this assignment."`);
-                const penaltyScore = points_possible * 0.9; //10% total poiints deducted
-                console.log(`Your score is now after the 10% penalty: ${penaltyScore}`);
-            } else {
-                console.log("You turned in your assignment on time.  You are awesome!!");
+            } else { //If assignment doesn't exist
+                console.log(`Assignment ID ${assignment_id} not found for learner ${learnerID}. Skipping this assignment.`);
             }
         }
 
-        //dueDateCompare("2023-01-25", "2023-01-26", 100); // Late submission example
+        // Calculate average learner score for learner if is valid and due
+        if (maxPossibleScore > 0) {
+            learnerData.avg = parseFloat((totalScore / maxPossibleScore).toFixed(3));
+            result.push(learnerData);
+        } else {
+            console.log(`No due assignments for learner ${learnerID}; skipping avg calculation.`);
+        }
 
-        // Calculate average learner score for learner
-        learnerData.avg = parseFloat((totalScore / maxPossibleScore).toFixed(3));
-        result.push(learnerData);
     });
-    // Print result after each learner processed
+    
+    //Print result after each learner processed
     console.log("Step 2- Result:", result);
     return result;
 }
+
+function dueDateCompare(due_at, submitted_at, points_possible, assignmentName) {
+    const dueDate = new Date(due_at).toLocaleDateString('en-US');
+    const submittedDate = new Date(submitted_at).toLocaleDateString('en-US');
+    const currentDate = new Date().toLocaleDateString('en-US');
+    let isLate = false; // Boolean value tracking late submissions
+
+    console.log("Due Date:", dueDate);
+    console.log("Submission Date:", submittedDate);
+    console.log("Current Date:", currentDate);
+
+    if (submittedDate > dueDate) {
+        isLate = true; // Set true if submission is late
+        // Assignment is not due at the moment
+        console.log(`Assignment ${assignmentName} is not due yet. Due date  is: ${due_at}`);
+        return;
+    } else if (submittedDate > dueDate) {
+        isLate = true;  // Set to true if submission is late
+        // Assignment is late, deduct 10%
+        console.log(`"Assignment is late. You lose 10% of the total points possible for this assignment."`);
+        const penaltyScore = points_possible * 0.9; //10% total poiints deducted
+        console.log(`Your score is now after the 10% penalty: ${penaltyScore}`);
+    } else {
+        console.log("You turned in your assignment on time.  You are awesome!!");
+    }
+
+    return isLate; // Return Boolean
+}
+
+//Was used to test if dueDate worked and it did
+//dueDateCompare("2023-01-25", "2023-01-26", 100); // Late submission example
+
+
+
+
 const result = getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions);
-console.log(result);
+console.log("Final result:", result)
